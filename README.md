@@ -114,7 +114,7 @@ The main results I observed were:
 
 ### TensorBoard results
 
-![TensorBoard reward and episode length](screenshots/tensorboard-reward.png)
+![TensorBoard reward and episode length](screenshots/Screenshot 2026-10-17 215808.png)
 
 The reward plateau is consistent with the reward-handling logic in my script and the five-step Decision Period.
 
@@ -169,7 +169,7 @@ unity-mlagents-3dball/
 │   └── 3DBall.onnx
 │
 └── screenshots/
-    └── tensorboard-reward.png
+    └── 
 ```
 
 ## 8. What I learned
