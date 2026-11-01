@@ -102,6 +102,12 @@ The `epsilon: 0.2` setting gives a probability-ratio clipping range of `0.8 to 1
 
 This helps control policy updates, although clipping does not guarantee a strict 20% limit on every policy probability change.
 
+---
+**Result:** mean reward rose from 1.2 (untrained) to the 100.0 maximum in ~170k steps
+(~10 minutes, 12 parallel platforms). The run was resumed to export the model and
+ended at step 511,576.
+---
+
 ## 4. Understanding the training results
 
 I used TensorBoard to monitor the training process.
@@ -114,7 +120,8 @@ The main results I observed were:
 
 ### TensorBoard results
 
-![TensorBoard reward and episode length](screenshots/Screenshot 2026-10-17 215808.png)
+![TensorBoard reward and episode length](screenshots/tensorboard1.png)
+![TensorBoard reward and episode length](screenshots/tensorboard2.png)
 
 The reward plateau is consistent with the reward-handling logic in my script and the five-step Decision Period.
 
@@ -138,7 +145,7 @@ If I switch to `AddReward(0.1f)` and accumulate five successful rewards per inte
 
 These are simplified estimates, not the exact returns of a finite episode.
 
-The change increases the reward scale by a factor of five. PPO's advantage normalization can reduce the direct effect of reward scaling on policy updates, but the value function still needs to predict the larger returns.
+In ML-Agents’ PPO trainer (ppo/trainer.py), the GAE advantages (λ = 0.99) are normalized across the update buffer to zero mean and unit variance, while the returns are computed from the un-normalized advantages. So the policy update should be largely insensitive to reward scale, but I expect the value loss to grow with it
 
 Because value loss depends on prediction errors, the `AddReward()` experiment could produce larger value-loss spikes. I would need to compare the training curves before concluding whether it improves learning speed or stability.
 
@@ -153,7 +160,15 @@ results/
 
 The model can be assigned to the appropriate Unity ML-Agents Behavior Parameters configuration for inference.
 
-The exact model filename and location may differ depending on which training run was completed.
+## Reproduce
+Unity 6 (6000.0.77f1), ML-Agents package 4.1.0, Python 3.10
+mlagents-learn config/3DBall.yaml --run-id=3DBall_01
+
+## Problems solved
+Training finished but the ONNX export crashed with `numpy has no attribute 'exceptions'`.
+`pip check` showed `onnx` and `ml_dtypes` needed newer numpy/protobuf than ML-Agents pins.
+Downgrading the export libraries fixed it, and `--resume` re-exported the saved checkpoint.
+
 
 ## 7. Project structure
 
@@ -201,3 +216,4 @@ This is my starting point for exploring reinforcement learning in Unity, and I p
 ---
 
 **Tech stack:** Unity · C# · Unity ML-Agents · Python · PPO · TensorBoard · ONNX
+
